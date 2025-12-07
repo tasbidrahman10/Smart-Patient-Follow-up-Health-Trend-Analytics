@@ -1,0 +1,549 @@
+{
+  "name": "Patient Follow-up Reminder System",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 24
+            }
+          ]
+        }
+      },
+      "id": "a637ba71-b026-4b24-9e06-032eee06f748",
+      "name": "Daily Trigger - 9 AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1536,
+        -480
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "send-manual-reminder",
+        "options": {}
+      },
+      "id": "4b5b95e3-0d15-40d0-b39e-35710c109b08",
+      "name": "Manual Reminder Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        -1520,
+        80
+      ],
+      "webhookId": "send-manual-reminder"
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:5000/api/reminders/upcoming",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "c52dc3a6-d789-4862-8daa-cc48204c708e",
+      "name": "Fetch Upcoming Reminders",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -1344,
+        -480
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, name, mail, contact, next_followup, reminder_preference \nFROM patients \nWHERE id = {{$json.body.patient_id}}",
+        "options": {}
+      },
+      "id": "a5c792a8-a519-4fad-a15b-4322d23c5d48",
+      "name": "Fetch Patient Details (Manual)",
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.4,
+      "position": [
+        -1296,
+        80
+      ],
+      "credentials": {
+        "mySql": {
+          "id": "89KHbuh1wdRZZoxT",
+          "name": "MySQL account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "0cae51c3-81a0-44c8-aa9a-538159bd7352",
+      "name": "Split into Individual Patients",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -1120,
+        -480
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:5000/api/reminders/create",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "patient_id",
+              "value": "={{$json.id}}"
+            },
+            {
+              "name": "reminder_type",
+              "value": "={{$json.reminder_preference || 'email'}}"
+            },
+            {
+              "name": "reminder_date",
+              "value": "={{$json.next_followup}}"
+            },
+            {
+              "name": "scheduled_time",
+              "value": "09:00:00"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "49a57cbb-e796-4bdc-98a4-2a40f742b4fd",
+      "name": "Create Reminder Record",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -752,
+        -192
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "check-email",
+              "leftValue": "={{ $json.reminder_preference }}",
+              "rightValue": "email",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "check-both",
+              "leftValue": "={{ $json.reminder_preference }}",
+              "rightValue": "both",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "3e362940-947e-442e-8796-0b14fb056b1d",
+      "name": "Should Send Email?",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [
+        -576,
+        -352
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "check-sms",
+              "leftValue": "={{ $json.reminder_preference }}",
+              "rightValue": "sms",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "check-both-sms",
+              "leftValue": "={{ $json.reminder_preference }}",
+              "rightValue": "both",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "ba554098-7ae0-45d6-a054-bbf00b9deafe",
+      "name": "Should Send SMS?",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [
+        -576,
+        -176
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "=noreply@hospital.com",
+        "toEmail": "={{$json.mail}}",
+        "subject": "Reminder: Follow-up Appointment",
+        "html": "=<!DOCTYPE html>\n<html>\n<head>\n    <style>\n        body { \n            font-family: Arial, sans-serif; \n            line-height: 1.6; \n            color: #333; \n            padding: 20px;\n        }\n        .container { \n            max-width: 600px; \n            margin: 0 auto; \n            background-color: #f9f9f9;\n            padding: 30px;\n            border-radius: 10px;\n        }\n        .header { \n            background-color: #4CAF50; \n            color: white; \n            padding: 20px; \n            text-align: center; \n            border-radius: 10px;\n            margin-bottom: 20px;\n        }\n        .content { \n            background-color: white; \n            padding: 20px; \n            border-radius: 10px;\n        }\n        .appointment-box { \n            background-color: #e3f2fd; \n            padding: 15px; \n            margin: 20px 0; \n            border-left: 4px solid #2196F3;\n            border-radius: 5px;\n        }\n        .footer { \n            text-align: center; \n            margin-top: 20px; \n            color: #666; \n            font-size: 12px; \n        }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <div class=\"header\">\n            <h2>📅 Appointment Reminder</h2>\n        </div>\n        <div class=\"content\">\n            <p>Hello <strong>{{$json.name}}</strong>,</p>\n            \n            <p>This is a friendly reminder about your upcoming follow-up appointment.</p>\n            \n            <div class=\"appointment-box\">\n                <h3>📆 Appointment Date:</h3>\n                <p style=\"font-size: 18px; margin: 5px 0;\"><strong>{{$json.next_followup}}</strong></p>\n            </div>\n            \n            <p>Please make sure to:</p>\n            <ul>\n                <li>Arrive on time</li>\n                <li>Bring your medical records</li>\n                <li>Bring your current medications list</li>\n            </ul>\n            \n            <p>If you need to reschedule, please contact us as soon as possible.</p>\n            \n            <p>Thank you!</p>\n        </div>\n        <div class=\"footer\">\n            <p>This is an automated reminder. Please do not reply to this email.</p>\n        </div>\n    </div>\n</body>\n</html>\n\n",
+        "options": {}
+      },
+      "id": "eb413530-d56b-431c-a0c9-8eb3103c1d5e",
+      "name": "Send Email Reminder",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        -352,
+        -448
+      ],
+      "webhookId": "b768a6be-96d9-4988-9126-aca1455ac6da",
+      "credentials": {
+        "smtp": {
+          "id": "qZaJ4WdW4WWx5TUJ",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "from": "+8801605955366",
+        "to": "={{$json.contact}}",
+        "message": "=Hello {{$json.name}}, you have a follow-up appointment scheduled on {{$json.next_followup}}. Please arrive on time. Thank you!",
+        "options": {}
+      },
+      "id": "9ede1bc6-41ab-4831-b42b-60b572c44ed1",
+      "name": "Send SMS Reminder",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        -352,
+        32
+      ],
+      "credentials": {
+        "twilioApi": {
+          "id": "BmV5xstskesCoHe0",
+          "name": "Twilio account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=http://localhost:5000/api/reminders/update-status/{{$json.reminderId}}",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "status",
+              "value": "sent"
+            },
+            {
+              "name": "log_type",
+              "value": "email_sent"
+            },
+            {
+              "name": "log_message",
+              "value": "Email reminder sent successfully"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "994d55cb-dc88-434a-9839-e3d0582d4d49",
+      "name": "Update Email Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -48,
+        -384
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=http://localhost:5000/api/reminders/update-status/{{$json.reminderId}}",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "status",
+              "value": "sent"
+            },
+            {
+              "name": "log_type",
+              "value": "sms_sent"
+            },
+            {
+              "name": "log_message",
+              "value": "SMS reminder sent successfully"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "90ba79e8-8587-462e-82c4-45433ab9c996",
+      "name": "Update SMS Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -48,
+        96
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=http://localhost:5000/api/reminders/update-status/{{$json.reminderId}}",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "status",
+              "value": "failed"
+            },
+            {
+              "name": "failure_reason",
+              "value": "={{$json.error.message || 'Unknown error'}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4c172258-1f37-4dc7-a64e-1d9caaec0984",
+      "name": "Update Failed Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -48,
+        -160
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "fields": {
+          "values": [
+            {
+              "name": "status",
+              "stringValue": "success"
+            },
+            {
+              "name": "message",
+              "stringValue": "Reminders processed successfully"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "122e62e3-a511-4257-8575-43c35d8689b2",
+      "name": "Success Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.2,
+      "position": [
+        288,
+        -208
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Daily Trigger - 9 AM": {
+      "main": [
+        [
+          {
+            "node": "Fetch Upcoming Reminders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Upcoming Reminders": {
+      "main": [
+        [
+          {
+            "node": "Split into Individual Patients",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Reminder Record": {
+      "main": [
+        [
+          {
+            "node": "Should Send Email?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Should Send SMS?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Should Send Email?": {
+      "main": [
+        [
+          {
+            "node": "Send Email Reminder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Should Send SMS?": {
+      "main": [
+        [
+          {
+            "node": "Send SMS Reminder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email Reminder": {
+      "main": [
+        [
+          {
+            "node": "Update Email Status",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Update Failed Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send SMS Reminder": {
+      "main": [
+        [
+          {
+            "node": "Update SMS Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual Reminder Webhook": {
+      "main": [
+        [
+          {
+            "node": "Fetch Patient Details (Manual)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Patient Details (Manual)": {
+      "main": [
+        [
+          {
+            "node": "Create Reminder Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split into Individual Patients": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Create Reminder Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Email Status": {
+      "main": [
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Failed Status": {
+      "main": [
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update SMS Status": {
+      "main": [
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "2352dc94-72a8-486d-be5a-74b00d23c608",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ca344f41994f4217ae32313b5a30bf53339323ee8ade26ec7ce612c3d8e07285"
+  },
+  "id": "lrBubjEBPmWXvWfY",
+  "tags": []
+}

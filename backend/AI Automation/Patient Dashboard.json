@@ -1,0 +1,420 @@
+{
+  "name": "Patient Dashboard",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "patient-dashboard",
+        "responseMode": "responseNode",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html; charset=utf-8"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -896,
+        256
+      ],
+      "id": "df38ead5-90a9-4f14-a8b6-0bb3a0f56eeb",
+      "name": "Webhook",
+      "webhookId": "6262b97d-d7c5-467f-a708-6cf003f27c0f"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n  id, name, age, gender, contact, mail, condition_type, \n  glucose, systolic_bp, diastolic_bp, heart_rate, bmi, \n  insulin, blood_sugar, ck_mb, troponin, \n  DATE_FORMAT(visit_date, '%Y-%m-%d') as visit_date_formatted, \n  DATE_FORMAT(next_followup, '%Y-%m-%d') as next_followup_formatted, \n  assigned_doctor, status \nFROM patients \nWHERE id = {{ $('Webhook').item.json.body.patient_id ?? $('Webhook').item.json.patient_id }}\nLIMIT 1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -464,
+        256
+      ],
+      "id": "93acc402-9e5a-4e5b-aa12-46f927fb96c9",
+      "name": "Fetch Patient Data",
+      "credentials": {
+        "mySql": {
+          "id": "HAMZnbJ9X0EXfD8n",
+          "name": "MySQL account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nif (items.length === 0) {\n  return [{\n    json: {\n      error: true,\n      patient_id: $('Webhook').first().json.patient_id,\n      html: `<!DOCTYPE html><html><head><meta charset=\"UTF-8\"><title>Patient Not Found</title><style>body{font-family:sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%)}.error-container{background:white;padding:3rem;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,0.3);text-align:center;max-width:500px}.error-icon{font-size:4rem;margin-bottom:1rem}h1{color:#e53e3e;margin:0 0 1rem 0}p{color:#4a5568;margin:0.5rem 0}</style></head><body><div class=\"error-container\"><div class=\"error-icon\">🔍</div><h1>Patient Not Found</h1><p>No patient record exists for ID: ${$('Webhook').first().json.patient_id}</p></div></body></html>`\n    }\n  }];\n}\n\nconst patient = items[0].json;\nconst safeNum = (val, def = 0) => { const n = parseFloat(val); return isNaN(n) ? def : n; };\nconst safeInt = (val, def = 0) => { const n = parseInt(val); return isNaN(n) ? def : n; };\n\nconst glucose = safeNum(patient.glucose);\nconst bmi = safeNum(patient.bmi);\nconst heartRate = safeInt(patient.heart_rate);\nconst systolic = safeInt(patient.systolic_bp);\nconst diastolic = safeInt(patient.diastolic_bp);\n\nlet bmiCategory = \"Unknown\", bmiColor = \"#718096\";\nif (bmi > 0) {\n  if (bmi < 18.5) { bmiCategory = \"Underweight\"; bmiColor = \"#f6ad55\"; }\n  else if (bmi < 25) { bmiCategory = \"Normal\"; bmiColor = \"#48bb78\"; }\n  else if (bmi < 30) { bmiCategory = \"Overweight\"; bmiColor = \"#ed8936\"; }\n  else { bmiCategory = \"Obese\"; bmiColor = \"#e53e3e\"; }\n}\n\nlet bpStatus = \"Unknown\", bpColor = \"#718096\";\nif (systolic > 0 && diastolic > 0) {\n  if (systolic >= 140 || diastolic >= 90) { bpStatus = \"Hypertension Stage 2\"; bpColor = \"#c53030\"; }\n  else if (systolic >= 130 || diastolic >= 80) { bpStatus = \"Hypertension Stage 1\"; bpColor = \"#e53e3e\"; }\n  else if (systolic >= 120 && systolic < 130 && diastolic < 80) { bpStatus = \"Elevated\"; bpColor = \"#ed8936\"; }\n  else { bpStatus = \"Normal\"; bpColor = \"#48bb78\"; }\n}\n\nlet glucoseZone = \"Unknown\", glucoseColor = \"#718096\";\nif (glucose > 0) {\n  if (glucose >= 125) { glucoseZone = \"Diabetic\"; glucoseColor = \"#e53e3e\"; }\n  else if (glucose >= 100) { glucoseZone = \"Prediabetic\"; glucoseColor = \"#ed8936\"; }\n  else { glucoseZone = \"Normal\"; glucoseColor = \"#48bb78\"; }\n}\n\nlet hrStatus = \"Unknown\", hrColor = \"#718096\";\nif (heartRate > 0) {\n  if (heartRate < 60) { hrStatus = \"Low\"; hrColor = \"#4299e1\"; }\n  else if (heartRate <= 100) { hrStatus = \"Normal\"; hrColor = \"#48bb78\"; }\n  else if (heartRate <= 120) { hrStatus = \"Elevated\"; hrColor = \"#ed8936\"; }\n  else { hrStatus = \"High\"; hrColor = \"#e53e3e\"; }\n}\n\nreturn [{\n  json: {\n    error: false,\n    id: patient.id,\n    name: patient.name || \"Unknown\",\n    age: safeInt(patient.age),\n    gender: patient.gender || \"Unknown\",\n    contact: patient.contact || \"N/A\",\n    mail: patient.mail || \"N/A\",\n    condition_type: patient.condition_type || \"Unknown\",\n    assigned_doctor: patient.assigned_doctor || \"Unassigned\",\n    status: patient.status || \"Unknown\",\n    glucose, bmi, heart_rate: heartRate, systolic_bp: systolic, diastolic_bp: diastolic,\n    insulin: safeNum(patient.insulin),\n    blood_sugar: safeNum(patient.blood_sugar),\n    ck_mb: safeNum(patient.ck_mb),\n    troponin: safeNum(patient.troponin),\n    visit_date_formatted: patient.visit_date_formatted || \"N/A\",\n    next_followup_formatted: patient.next_followup_formatted || \"N/A\",\n    bmi_category: bmiCategory, bmi_color: bmiColor,\n    bp_status: bpStatus, bp_color: bpColor,\n    glucose_zone: glucoseZone, glucose_color: glucoseColor,\n    hr_status: hrStatus, hr_color: hrColor\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -240,
+        256
+      ],
+      "id": "0370954f-731e-4a9b-9084-b46bc5264eaa",
+      "name": "Process Patient Data"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "error-check",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -32,
+        256
+      ],
+      "id": "6aa8616e-8bb8-44dc-9c5e-c189d59cf151",
+      "name": "Check for Errors"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.all()[0].json;\nconst enc = (cfg) => `https://quickchart.io/chart?c=${encodeURIComponent(JSON.stringify(cfg))}&width=400&height=300`;\n\nitem.glucoseChartUrl = enc({\n  type: 'doughnut',\n  data: { datasets: [{ data: [item.glucose ?? 100, 200 - (item.glucose ?? 100)], backgroundColor: [item.glucose_color ?? '#48bb78', '#e2e8f0'], borderWidth: 0 }] },\n  options: { rotation: 270, circumference: 180, cutout: '80%', plugins: { legend: { display: false }, title: { display: true, text: `Glucose: ${item.glucose ?? 100} mg/dL - ${item.glucose_zone ?? 'Normal'}`, font: { size: 18 } } } }\n});\n\nitem.bpChartUrl = enc({\n  type: 'bar',\n  data: { labels: ['Systolic', 'Diastolic'], datasets: [{ data: [item.systolic_bp ?? 120, item.diastolic_bp ?? 80], backgroundColor: [item.bp_color ?? '#60a5fa', '#93c5fd'] }] },\n  options: { plugins: { legend: { display: false }, title: { display: true, text: `BP: ${item.systolic_bp ?? 120}/${item.diastolic_bp ?? 80} - ${item.bp_status ?? 'Normal'}`, font: { size: 18 } } }, scales: { y: { beginAtZero: true, max: 200 } } }\n});\n\nitem.hrChartUrl = enc({\n  type: 'doughnut',\n  data: { datasets: [{ data: [item.heart_rate ?? 70, 200 - (item.heart_rate ?? 70)], backgroundColor: ['#f472b6', '#fce7f3'], borderWidth: 0 }] },\n  options: { rotation: 270, circumference: 180, cutout: '80%', plugins: { legend: { display: false }, title: { display: true, text: `Heart Rate: ${item.heart_rate ?? 70} bpm`, font: { size: 18 } } } }\n});\n\nitem.bmiChartUrl = enc({\n  type: 'doughnut',\n  data: { datasets: [{ data: [item.bmi ?? 22, 40 - (item.bmi ?? 22)], backgroundColor: [item.bmi_color ?? '#a78bfa', '#ede9fe'], borderWidth: 0 }] },\n  options: { rotation: 270, circumference: 180, cutout: '80%', plugins: { legend: { display: false }, title: { display: true, text: `BMI: ${item.bmi ?? 22} - ${item.bmi_category ?? 'Normal'}`, font: { size: 18 } } } }\n});\n\nreturn item;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        368
+      ],
+      "id": "23c36d68-6c25-461c-b41c-f5e2eaffb7f5",
+      "name": "Build Chart URLs"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.glucoseChartUrl }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "glucoseChart"
+            }
+          },
+          "timeout": 10000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        416,
+        224
+      ],
+      "id": "3543808b-12f3-4ce7-a027-a9b110f99f93",
+      "name": "Glucose Gauge"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.bpChartUrl }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "bpChart"
+            }
+          },
+          "timeout": 10000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        416,
+        352
+      ],
+      "id": "4fd7dcf9-aca0-433a-b0a0-9b9e65aa82dd",
+      "name": "BP Chart"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.hrChartUrl }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "heartChart"
+            }
+          },
+          "timeout": 10000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        416,
+        464
+      ],
+      "id": "31cf77c0-6d42-4b96-a6a0-1b2f1b0e4eb2",
+      "name": "HR Chart"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.bmiChartUrl }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "bmiChart"
+            }
+          },
+          "timeout": 10000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        416,
+        592
+      ],
+      "id": "80e4bc25-131a-4826-acfd-fdee843c1083",
+      "name": "BMI Chart"
+    },
+    {
+      "parameters": {
+        "numberInputs": 4
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        640,
+        368
+      ],
+      "id": "7a293557-1d7e-4d66-b3c5-f4b215fce0ba",
+      "name": "Merge Charts"
+    },
+    {
+      "parameters": {
+        "jsCode": "const p = $input.all()[0].json;\nconst all = $input.all();\nlet gc='',bc='',hc='',mc='';\nfor(const i of all){\n  if(i.binary?.glucoseChart) gc=i.binary.glucoseChart.data.toString('base64');\n  if(i.binary?.bpChart) bc=i.binary.bpChart.data.toString('base64');\n  if(i.binary?.heartChart) hc=i.binary.heartChart.data.toString('base64');\n  if(i.binary?.bmiChart) mc=i.binary.bmiChart.data.toString('base64');\n}\nconst g=gc?`data:image/png;base64,${gc}`:'';\nconst b=bc?`data:image/png;base64,${bc}`:'';\nconst h=hc?`data:image/png;base64,${hc}`:'';\nconst m=mc?`data:image/png;base64,${mc}`:'';\nconst t=new Date().toLocaleString('en-US',{dateStyle:'full',timeStyle:'long',timeZone:'Asia/Dhaka'});\nconst html=`<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\"><title>Patient Dashboard - ${p.name}</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:2rem;line-height:1.6}.container{max-width:1400px;margin:0 auto;background:white;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.3);overflow:hidden}.header{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;padding:2rem}.header h1{font-size:2rem;margin-bottom:0.5rem}.header .meta{display:flex;gap:2rem;flex-wrap:wrap;opacity:0.9;margin-top:1rem}.content{padding:2rem}.section{margin-bottom:2rem}.section-title{font-size:1.5rem;color:#2d3748;margin-bottom:1rem;padding-bottom:0.5rem;border-bottom:2px solid #e2e8f0}.info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem}.info-card{background:#f7fafc;padding:1rem;border-radius:8px;border-left:4px solid #667eea}.info-card .label{font-size:0.875rem;color:#718096;font-weight:600;text-transform:uppercase}.info-card .value{font-size:1.125rem;color:#2d3748;font-weight:600;margin-top:0.25rem}.vitals-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem}.vital-card{background:white;border:2px solid #e2e8f0;border-radius:12px;padding:1.5rem;text-align:center;transition:transform 0.2s}.vital-card:hover{transform:translateY(-4px);box-shadow:0 12px 24px rgba(0,0,0,0.1)}.vital-card .icon{font-size:2.5rem}.vital-card .value{font-size:2rem;font-weight:bold;margin:0.5rem 0}.vital-card .status{display:inline-block;padding:0.375rem 0.75rem;border-radius:20px;font-size:0.875rem;font-weight:600}.charts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(350px,1fr));gap:2rem}.chart-card{background:#f7fafc;border-radius:12px;padding:1.5rem;text-align:center}.chart-card img{max-width:100%;height:auto;border-radius:8px}.footer{background:#f7fafc;padding:1.5rem;border-top:1px solid #e2e8f0;text-align:center;color:#718096;font-size:0.875rem}.status-badge{padding:0.5rem 1rem;border-radius:20px;font-weight:600}.status-pending{background:#fef3c7;color:#92400e}.status-completed{background:#d1fae5;color:#065f46}</style></head><body><div class=\"container\"><div class=\"header\"><h1>🏥 Patient Health Dashboard</h1><h2>${p.name}</h2><div class=\"meta\"><span>📋 ID: <strong>${p.id}</strong></span><span>🩺 Condition: <strong>${p.condition_type}</strong></span><span>📅 Visit: <strong>${p.visit_date_formatted}</strong></span><span>🔄 Follow-up: <strong>${p.next_followup_formatted}</strong></span></div></div><div class=\"content\"><div class=\"section\"><h2 class=\"section-title\">👤 Patient Demographics</h2><div class=\"info-grid\"><div class=\"info-card\"><div class=\"label\">Age</div><div class=\"value\">${p.age} years</div></div><div class=\"info-card\"><div class=\"label\">Gender</div><div class=\"value\">${p.gender}</div></div><div class=\"info-card\"><div class=\"label\">Contact</div><div class=\"value\">${p.contact}</div></div><div class=\"info-card\"><div class=\"label\">Email</div><div class=\"value\">${p.mail}</div></div><div class=\"info-card\"><div class=\"label\">Doctor</div><div class=\"value\">${p.assigned_doctor}</div></div><div class=\"info-card\"><div class=\"label\">Status</div><div class=\"value\"><span class=\"status-badge status-${p.status.toLowerCase()}\">${p.status}</span></div></div></div></div><div class=\"section\"><h2 class=\"section-title\">💊 Key Health Metrics</h2><div class=\"vitals-grid\"><div class=\"vital-card\"><div class=\"icon\">🩸</div><div class=\"value\" style=\"color:${p.glucose_color}\">${p.glucose} mg/dL</div><div class=\"status\" style=\"background-color:${p.glucose_color}22;color:${p.glucose_color}\">${p.glucose_zone}</div></div><div class=\"vital-card\"><div class=\"icon\">💉</div><div class=\"value\" style=\"color:${p.bp_color}\">${p.systolic_bp}/${p.diastolic_bp}</div><div class=\"status\" style=\"background-color:${p.bp_color}22;color:${p.bp_color}\">${p.bp_status}</div></div><div class=\"vital-card\"><div class=\"icon\">❤️</div><div class=\"value\" style=\"color:${p.hr_color}\">${p.heart_rate} BPM</div><div class=\"status\" style=\"background-color:${p.hr_color}22;color:${p.hr_color}\">${p.hr_status}</div></div><div class=\"vital-card\"><div class=\"icon\">⚖️</div><div class=\"value\" style=\"color:${p.bmi_color}\">${p.bmi}</div><div class=\"status\" style=\"background-color:${p.bmi_color}22;color:${p.bmi_color}\">${p.bmi_category}</div></div></div></div><div class=\"section\"><h2 class=\"section-title\">📊 Visual Analytics</h2><div class=\"charts-grid\"><div class=\"chart-card\">${g?`<img src=\"${g}\" alt=\"Glucose\"/>`:'<p>Loading...</p>'}</div><div class=\"chart-card\">${b?`<img src=\"${b}\" alt=\"BP\"/>`:'<p>Loading...</p>'}</div><div class=\"chart-card\">${h?`<img src=\"${h}\" alt=\"HR\"/>`:'<p>Loading...</p>'}</div><div class=\"chart-card\">${m?`<img src=\"${m}\" alt=\"BMI\"/>`:'<p>Loading...</p>'}</div></div></div><div class=\"section\"><h2 class=\"section-title\">🧪 Lab Results</h2><div class=\"info-grid\"><div class=\"info-card\"><div class=\"label\">Insulin</div><div class=\"value\">${p.insulin} µU/mL</div></div><div class=\"info-card\"><div class=\"label\">Blood Sugar</div><div class=\"value\">${p.blood_sugar} mg/dL</div></div><div class=\"info-card\"><div class=\"label\">CK-MB</div><div class=\"value\">${p.ck_mb} ng/mL</div></div><div class=\"info-card\"><div class=\"label\">Troponin</div><div class=\"value\">${p.troponin} ng/mL</div></div></div></div></div><div class=\"footer\"><div style=\"font-weight:600;margin-bottom:0.5rem\">Generated: ${t}</div><p>⚠️ Auto-generated for clinical review only.</p></div></div></body></html>`;\nreturn{json:{html,id:p.id}};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        864,
+        368
+      ],
+      "id": "2678e2f1-f2b4-4219-a143-5be405d2d790",
+      "name": "Build HTML"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.html }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1088,
+        256
+      ],
+      "id": "3be19de7-d7c8-4cd9-b86c-bc1911bba22a",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "const webhookData = $input.first().json;\n\nconsole.log('=== WEBHOOK DATA DEBUG ===');\nconsole.log('Full data:', JSON.stringify(webhookData, null, 2));\nconsole.log('patient_id direct:', webhookData.patient_id);\nconsole.log('patient_id in body:', webhookData.body?.patient_id);\nconsole.log('========================');\n\n// Return the patient_id in a consistent format\nreturn {\n  json: {\n    patient_id: webhookData.body?.patient_id || webhookData.patient_id\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -688,
+        256
+      ],
+      "id": "5e8d5db8-4d02-4d1c-aa9b-e50c39b78005",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Patient Data": {
+      "main": [
+        [
+          {
+            "node": "Process Patient Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Patient Data": {
+      "main": [
+        [
+          {
+            "node": "Check for Errors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check for Errors": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Chart URLs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Chart URLs": {
+      "main": [
+        [
+          {
+            "node": "Glucose Gauge",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "BP Chart",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HR Chart",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "BMI Chart",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Glucose Gauge": {
+      "main": [
+        [
+          {
+            "node": "Merge Charts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BP Chart": {
+      "main": [
+        [
+          {
+            "node": "Merge Charts",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "HR Chart": {
+      "main": [
+        [
+          {
+            "node": "Merge Charts",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "BMI Chart": {
+      "main": [
+        [
+          {
+            "node": "Merge Charts",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Merge Charts": {
+      "main": [
+        [
+          {
+            "node": "Build HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build HTML": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Fetch Patient Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a176202b-d8c6-4b80-8909-db265dd27404",
+  "meta": {
+    "instanceId": "ca344f41994f4217ae32313b5a30bf53339323ee8ade26ec7ce612c3d8e07285"
+  },
+  "id": "KodOSELtjwjH1U3f",
+  "tags": []
+}
