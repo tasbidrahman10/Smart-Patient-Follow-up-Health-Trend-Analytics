@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register Patient - Smart Patient Follow-Up System</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    
+    <!-- Top Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
+        <div class="container-fluid">
+            <button class="btn btn-link text-primary" id="sidebarToggle">
+                <i class="bi bi-list fs-4"></i>
+            </button>
+            <a class="navbar-brand fw-bold text-primary" href="#">
+                <i class="bi bi-heart-pulse-fill"></i> Smart Patient Follow-Up System
+            </a>
+            <div class="dropdown">
+                <button class="btn btn-link text-dark dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown">
+                    <i class="bi bi-person-circle fs-5"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="#"><i class="bi bi-person"></i> Profile</a></li>
+                    <li><a class="dropdown-item" href="#"><i class="bi bi-gear"></i> Settings</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="index.html"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="d-flex">
+        <!-- Sidebar -->
+        <div class="sidebar bg-primary text-white" id="sidebar">
+            <div class="sidebar-header p-3 mt-5">
+                <h5 class="text-center">Navigation</h5>
+            </div>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link text-white" href="dashboard.html">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white active" href="register.html">
+                        <i class="bi bi-person-plus-fill"></i> Register Patient
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white" href="reminders.html">
+                        <i class="bi bi-bell-fill"></i> Reminders
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white" href="analytics.html">
+                        <i class="bi bi-bar-chart-fill"></i> Analytics
+                    </a>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="container-fluid p-4">
+                <div class="row mb-4">
+                    <div class="col">
+                        <h2 class="fw-bold text-primary">Patient Registration</h2>
+                        <p class="text-muted">Add a new patient to the system</p>
+                    </div>
+                </div>
+                
+                <div class="row justify-content-center">
+                    <div class="col-lg-8">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-primary text-white py-3">
+                                <h5 class="mb-0"><i class="bi bi-person-plus-fill"></i> New Patient Registration Form</h5>
+                            </div>
+                            <div class="card-body p-4">
+
+                            
+                               <!-- Patient Registration Form - ONLY your fields -->
+                                <form id="registrationForm">
+                                    <!-- Basic Information -->
+                                        <h5 class="text-primary mb-3"><i class="bi bi-person"></i> Basic Information</h5>
+    
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label for="patientName" class="form-label">Name <span class="text-danger">*</span></label>
+                                                <input type="text" class="form-control" id="patientName" placeholder="Enter full name" required>
+                                            </div>
+        
+                                            <div class="col-md-3 mb-3">
+                                                <label for="patientAge" class="form-label">Age <span class="text-danger">*</span></label>
+                                                <input type="number" class="form-control" id="patientAge" placeholder="Age" required>
+                                            </div>
+        
+                                            <div class="col-md-3 mb-3">
+                                                <label for="patientGender" class="form-label">Gender <span class="text-danger">*</span></label>
+                                                <select class="form-select" id="patientGender" required>
+                                                <option value="">Select</option>
+                                                <option value="Male">Male</option>
+                                                <option value="Female">Female</option>
+                                                <option value="Other">Other</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                            
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                    <label for="patientContact" class="form-label">Contact <span class="text-danger">*</span></label>
+                                                    <input type="text" class="form-control" id="patientContact" placeholder="Phone number" required>
+                                            </div>
+                                                
+                                            <div class="col-md-6 mb-3">
+                                                    <label for="patientMail" class="form-label">Mail</label>
+                                                    <input type="email" class="form-control" id="patientMail" placeholder="Email address">
+                                            </div>
+                                        </div>
+                                            
+                                            <!-- Medical Information -->
+                                            <h5 class="text-primary mb-3 mt-4"><i class="bi bi-clipboard-pulse"></i> Medical Information</h5>
+                                            
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="condition" class="form-label">Condition <span class="text-danger">*</span></label>
+                                                    <input type="text" class="form-control" id="condition" placeholder="e.g., Diabetes, Hypertension" required>
+                                                </div>
+                                                
+                                                <div class="col-md-3 mb-3">
+                                                    <label for="lengthOfStay" class="form-label">Length of Stay (days)</label>
+                                                    <input type="number" class="form-control" id="lengthOfStay" placeholder="Days">
+                                                </div>
+                                                
+                                                <div class="col-md-3 mb-3">
+                                                    <label for="outcome" class="form-label">Outcome</label>
+                                                    <select class="form-select" id="outcome">
+                                                        <option value="">Select</option>
+                                                        <option value="Recovered">Recovered</option>
+                                                        <option value="Stable">Stable</option>
+                                                        <option value="Critical">Critical</option>
+                                                        <option value="Deceased">Deceased</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Clinical Data -->
+                                            <h5 class="text-primary mb-3 mt-4"><i class="bi bi-heart-pulse"></i> Clinical Data</h5>
+                                            
+                                            <div class="row">
+                                                <div class="col-md-3 mb-3">
+                                                    <label for="glucose" class="form-label">Glucose (mg/dL)</label>
+                                                    <input type="number" step="0.01" class="form-control" id="glucose" placeholder="Glucose">
+                                                </div>
+                                                
+                                                <div class="col-md-3 mb-3">
+                                                    <label for="insulin" class="form-label">Insulin</label>
+                                                    <input type="number" step="0.01" class="form-control" id="insulin" placeholder="Insulin">
+                                                </div>
+                                                
+                                                <div class="col-md-3 mb-3">
+                                                    <label for="bmi" class="form-label">BMI</label>
+                                                    <input type="number" step="0.01" class="form-control" id="bmi" placeholder="BMI">
+                                                </div>
+                                                
+                                                <div class="col-md-3 mb-3">
+                                                    <label for="diabetes" class="form-label">Diabetes</label>
+                                                    <select class="form-select" id="diabetes">
+                                                        <option value="">Select</option>
+                                                        <option value="1">Yes</option>
+                                                        <option value="0">No</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="row">
+                                                <div class="col-md-3 mb-3">
+                                                    <label for="heartRate" class="form-label">Heart Rate (bpm)</label>
+                                                    <input type="number" class="form-control" id="heartRate" placeholder="Heart rate">
+                                                </div>
+                                                
+                                                <div class="col-md-3 mb-3">
+                                                    <label for="systolicBp" class="form-label">Systolic BP</label>
+                                                    <input type="number" class="form-control" id="systolicBp" placeholder="Systolic">
+                                                </div>
+                                                
+                                                <div class="col-md-3 mb-3">
+                                                    <label for="diastolicBp" class="form-label">Diastolic BP</label>
+                                                    <input type="number" class="form-control" id="diastolicBp" placeholder="Diastolic">
+                                                </div>
+                                                
+                                                <div class="col-md-3 mb-3">
+                                                    <label for="bloodSugar" class="form-label">Blood Sugar</label>
+                                                    <input type="number" step="0.01" class="form-control" id="bloodSugar" placeholder="Blood sugar">
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="ckMb" class="form-label">CK-MB</label>
+                                                    <input type="number" step="0.01" class="form-control" id="ckMb" placeholder="CK-MB">
+                                                </div>
+                                                
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="troponin" class="form-label">Troponin</label>
+                                                    <input type="number" step="0.0001" class="form-control" id="troponin" placeholder="Troponin">
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Follow-up Information -->
+                                            <h5 class="text-primary mb-3 mt-4"><i class="bi bi-calendar-check"></i> Follow-up Information</h5>
+                                            
+                                            <div class="row">
+                                                <div class="col-md-4 mb-3">
+                                                    <label for="visitDate" class="form-label">Visit Date <span class="text-danger">*</span></label>
+                                                    <input type="date" class="form-control" id="visitDate" required>
+                                                </div>
+                                                
+                                                <div class="col-md-4 mb-3">
+                                                    <label for="nextFollowup" class="form-label">Next Follow-up <span class="text-danger">*</span></label>
+                                                    <input type="date" class="form-control" id="nextFollowup" required>
+                                                </div>
+                                                
+                                                <div class="col-md-4 mb-3">
+                                                    <label for="assignedDoctor" class="form-label">Assigned Doctor</label>
+                                                    <input type="text" class="form-control" id="assignedDoctor" placeholder="Doctor name">
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Submit Buttons -->
+                                            <div class="d-flex justify-content-end gap-2 mt-4">
+                                                <button type="button" class="btn btn-secondary" onclick="document.getElementById('registrationForm').reset()">
+                                                    <i class="bi bi-x-circle"></i> Clear
+                                                </button>
+                                                <button type="submit" class="btn btn-primary">
+                                                    <i class="bi bi-check-circle"></i> Register Patient
+                                                </button>
+                                            </div>
+                                            </form> 
+                            </div>
+                                            </div>
+                                     </div>
+                            </div>
+                    </div>
+            </div>
+    </div>
+                                            
+  
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Sidebar Toggle
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('active');
+        });
+        
+        const API_URL = 'http://localhost:5000/api';
+    
+    // Get auth token from localStorage
+    const authToken = localStorage.getItem('authToken');
+    
+    if (!authToken) {
+        alert('Please login first');
+        window.location.href = 'index.html';
+    }
+    
+    // Patient Registration Form Handler
+    document.getElementById('registrationForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const patientData = {
+            name: document.getElementById('patientName').value,
+            age: parseInt(document.getElementById('patientAge').value),
+            gender: document.getElementById('patientGender').value,
+            contact: document.getElementById('patientContact').value,
+            mail: document.getElementById('patientMail').value || null,
+            condition_type: document.getElementById('condition').value, // FIXED: was 'condition'
+            length_of_stay: document.getElementById('lengthOfStay').value ? parseInt(document.getElementById('lengthOfStay').value) : null, // FIXED: was 'lengthOfStay'
+            outcome: document.getElementById('outcome').value || null,
+            glucose: document.getElementById('glucose').value ? parseFloat(document.getElementById('glucose').value) : null,
+            insulin: document.getElementById('insulin').value ? parseFloat(document.getElementById('insulin').value) : null,
+            bmi: document.getElementById('bmi').value ? parseFloat(document.getElementById('bmi').value) : null,
+            diabetes: document.getElementById('diabetes').value ? parseInt(document.getElementById('diabetes').value) : null,
+            heart_rate: document.getElementById('heartRate').value ? parseInt(document.getElementById('heartRate').value) : null, // FIXED: was 'heartRate', ID was 'heart_Rate'
+            systolic_bp: document.getElementById('systolicBp').value ? parseInt(document.getElementById('systolicBp').value) : null, // FIXED: was 'systolicBp', ID was 'systolic_Bp'
+            diastolic_bp: document.getElementById('diastolicBp').value ? parseInt(document.getElementById('diastolicBp').value) : null, // FIXED: was 'diastolicBp', ID was 'diastolic_Bp'
+            blood_sugar: document.getElementById('bloodSugar').value ? parseFloat(document.getElementById('bloodSugar').value) : null, // FIXED: was 'bloodSugar', ID was 'blood_Sugar'
+            ck_mb: document.getElementById('ckMb').value ? parseFloat(document.getElementById('ckMb').value) : null, // FIXED: was 'ckMb'
+            troponin: document.getElementById('troponin').value ? parseFloat(document.getElementById('troponin').value) : null,
+            visit_date: document.getElementById('visitDate').value, // FIXED: was 'visitDate'
+            next_followup: document.getElementById('nextFollowup').value, // FIXED: was 'nextFollowup'
+            assigned_doctor: document.getElementById('assignedDoctor').value || null // FIXED: was 'assignedDoctor'
+};
+
+        try {
+            const response = await fetch(`${API_URL}/patients/register`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`
+                },
+                body: JSON.stringify(patientData)
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+                alert('Patient registered successfully!');
+                document.getElementById('registrationForm').reset();
+            } else {
+                alert(result.message || 'Registration failed');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Failed to connect to server');
+        }
+    });
+    
+    </script>
+</body>
+</html>

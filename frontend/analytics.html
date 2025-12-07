@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics - Smart Patient Follow-Up System</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+    
+    <style>
+        /* Tab Styling */
+        .tab-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #e2e8f0;
+            padding: 0 2rem;
+        }
+
+        .tab-btn {
+            padding: 1rem 2rem;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #718096;
+            transition: all 0.3s;
+        }
+
+        .tab-btn.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-btn:hover {
+            color: #667eea;
+        }
+
+        /* Section Toggle */
+        .hospital-analytics-section,
+        .patient-analytics-section {
+            padding: 2rem;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Patient Analytics Section */
+        .section-header {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .section-header h2 {
+            margin-bottom: 1rem;
+            color: #2d3748;
+            font-size: 1.5rem;
+        }
+
+        .patient-dropdown {
+            width: 100%;
+            max-width: 600px;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        .patient-dropdown:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .analytics-content {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Notification Toast */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            z-index: 9999;
+            animation: slideIn 0.3s ease;
+            min-width: 300px;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .notification.error {
+            background: #fed7d7;
+            color: #c53030;
+            border-left: 4px solid #c53030;
+        }
+
+        .notification.success {
+            background: #c6f6d5;
+            color: #2f855a;
+            border-left: 4px solid #2f855a;
+        }
+
+        .notification.info {
+            background: #bee3f8;
+            color: #2c5282;
+            border-left: 4px solid #2c5282;
+        }
+
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
+        <div class="container-fluid">
+            <button class="btn btn-link text-primary" id="sidebarToggle">
+                <i class="bi bi-list fs-4"></i>
+            </button>
+            <a class="navbar-brand fw-bold text-primary" href="#">
+                <i class="bi bi-heart-pulse-fill"></i> Smart Patient Follow-Up System
+            </a>
+            <div class="dropdown">
+                <button class="btn btn-link text-dark dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown">
+                    <i class="bi bi-person-circle fs-5"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="#"><i class="bi bi-person"></i> Profile</a></li>
+                    <li><a class="dropdown-item" href="#"><i class="bi bi-gear"></i> Settings</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item text-danger" href="#"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h4>Navigation</h4>
+        </div>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link" href="dashboard.html">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="register.html">
+                    <i class="bi bi-person-plus"></i> Register Patient
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="reminders.html">
+                    <i class="bi bi-bell"></i> Reminders
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link active" href="analytics.html">
+                    <i class="bi bi-graph-up"></i> Analytics
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="container-fluid">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1><i class="bi bi-graph-up"></i> Analytics Dashboard</h1>
+                <p class="text-muted">Data insights and reporting powered by Microsoft Fabric</p>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-primary">
+                            <i class="bi bi-people"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="totalPatients">0</h3>
+                            <p>Total Patients</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-success">
+                            <i class="bi bi-check-circle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="completionRate">0%</h3>
+                            <p>Follow-Up Completion Rate</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-warning">
+                            <i class="bi bi-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="missedFollowups">0</h3>
+                            <p>Missed Follow-Ups</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-danger">
+                            <i class="bi bi-graph-down"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="missedRate">0%</h3>
+                            <p>Missed Follow-Up Rate</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Buttons -->
+            <div class="tab-buttons">
+                <button id="hospitalAnalyticsBtn" class="tab-btn active">
+                    🏥 Hospital Analytics
+                </button>
+                <button id="patientAnalyticsBtn" class="tab-btn">
+                    👤 Patient Analytics
+                </button>
+            </div>
+
+            <!-- Hospital Analytics Section -->
+            <div class="hospital-analytics-section">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-hospital"></i> Hospital Performance Dashboard</h5>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="text-muted mb-3">Microsoft Fabric Hospital Dashboard</h6>
+                        <p class="small">Aggregate analytics: completion rates, overdue trends, disease distribution</p>
+                        <div class="alert alert-info">
+                            <strong>Integration Instructions:</strong><br>
+                            Replace this placeholder with your Microsoft Fabric Power BI embed iframe<br>
+                            <code>Filter: user_id or hospital_name</code>
+                        </div>
+                        <!-- Placeholder for Power BI Embed -->
+                        <div style="height: 600px; background: #f8f9fa; display: flex; align-items: center; justify-content: center; border-radius: 8px;">
+                            <div class="text-center">
+                                <i class="bi bi-bar-chart-fill" style="font-size: 4rem; color: #cbd5e0;"></i>
+                                <p class="text-muted mt-3">Power BI Hospital Dashboard</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-success text-white">
+                                <h6 class="mb-0">Disease Distribution</h6>
+                            </div>
+                            <div class="card-body">
+                                <div style="height: 300px; background: #f8f9fa; display: flex; align-items: center; justify-content: center; border-radius: 8px;">
+                                    <div class="text-center">
+                                        <i class="bi bi-pie-chart-fill" style="font-size: 3rem; color: #cbd5e0;"></i>
+                                        <p class="text-muted mt-3">Chart Placeholder</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-warning text-dark">
+                                <h6 class="mb-0">Follow-Up Status Breakdown</h6>
+                            </div>
+                            <div class="card-body">
+                                <div style="height: 300px; background: #f8f9fa; display: flex; align-items: center; justify-content: center; border-radius: 8px;">
+                                    <div class="text-center">
+                                        <i class="bi bi-graph-up" style="font-size: 3rem; color: #cbd5e0;"></i>
+                                        <p class="text-muted mt-3">Chart Placeholder</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Patient Analytics Section -->
+            <div class="patient-analytics-section hidden">
+                <div class="section-header">
+                    <h2><i class="bi bi-person-fill"></i> Select Patient</h2>
+                    <p class="text-muted mb-3">View detailed analytics for individual patients</p>
+                    <select id="patientSelect" class="patient-dropdown">
+                        <option value="">-- Choose a patient --</option>
+                        <!-- Options will be populated by JavaScript -->
+                    </select>
+                </div>
+                
+                <div class="analytics-content">
+                    <div style="text-align: center; padding: 4rem;">
+                        <div style="font-size: 4rem; color: #cbd5e0;">
+                            <i class="bi bi-person-circle"></i>
+                        </div>
+                        <h3 style="color: #2d3748; margin-top: 1rem;">No Patient Selected</h3>
+                        <p style="color: #718096;">
+                            Please select a patient from the dropdown above to view their analytics
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Sidebar Toggle -->
+    <script>
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('active');
+        });
+    </script>
+
+    <!-- ADD YOUR analytics_js.js CONTENT HERE -->
+    <script>
+        // PASTE THE ENTIRE analytics_js.js CONTENT HERE
+
+        // ============================================
+// ANALYTICS.HTML - PATIENT DASHBOARD INTEGRATION
+// ============================================
+
+// Configuration
+const N8N_WEBHOOK_URL = 'http://localhost:5678/webhook/patient-dashboard';
+
+// Store patient data globally
+let allPatients = [];
+
+// Load patients on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadPatients();
+    
+    // Add event listeners for tab switching
+    document.getElementById('hospitalAnalyticsBtn')?.addEventListener('click', showHospitalAnalytics);
+    document.getElementById('patientAnalyticsBtn')?.addEventListener('click', showPatientAnalytics);
+});
+
+// Load all patients from backend
+async function loadPatients() {
+    try {
+        const response = await fetch('http://localhost:5000/api/patients');
+        
+        if (!response.ok) {
+            throw new Error('Failed to fetch patients');
+        }
+        
+        const patients = await response.json();
+        allPatients = patients;
+        
+        // Populate the dropdown
+        populatePatientDropdown(patients);
+        
+        console.log(`Loaded ${patients.length} patients`);
+    } catch (error) {
+        console.error('Error loading patients:', error);
+        showNotification('Error loading patients. Please refresh the page.', 'error');
+    }
+}
+
+// Populate the patient selection dropdown
+function populatePatientDropdown(patients) {
+    const selectElement = document.getElementById('patientSelect');
+    
+    if (!selectElement) {
+        console.error('Patient select element not found');
+        return;
+    }
+    
+    // Clear existing options except the first one
+    selectElement.innerHTML = '<option value="">-- Choose a patient --</option>';
+    
+    // Add patients to dropdown
+    patients.forEach(patient => {
+        const option = document.createElement('option');
+        option.value = patient.id;
+        option.textContent = `${patient.name} - ${patient.condition_type}`;
+        option.dataset.patientId = patient.id;
+        selectElement.appendChild(option);
+    });
+    
+    // Add change event listener
+    selectElement.addEventListener('change', handlePatientSelection);
+}
+
+// Handle patient selection from dropdown
+async function handlePatientSelection(event) {
+    const patientId = event.target.value;
+    
+    if (!patientId) {
+        // No patient selected, show placeholder
+        showPlaceholder();
+        return;
+    }
+    
+    // Show loading state
+    showLoadingState();
+    
+    // Generate dashboard
+    await generatePatientDashboard(patientId);
+}
+
+// Generate patient dashboard via n8n webhook
+async function generatePatientDashboard(patientId) {
+    try {
+        console.log(`Generating dashboard for patient ID: ${patientId}`);
+        
+        // Show loading notification
+        const loadingNotification = showNotification('Generating patient dashboard...', 'info', false);
+        
+        // Call n8n webhook
+        const response = await fetch(N8N_WEBHOOK_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                patient_id: parseInt(patientId)
+            })
+        });
+        
+        // Remove loading notification
+        if (loadingNotification) {
+            loadingNotification.remove();
+        }
+        
+        if (!response.ok) {
+            throw new Error(`Webhook returned status ${response.status}`);
+        }
+        
+        // Get HTML response
+        const htmlContent = await response.text();
+        
+        console.log('Dashboard generated successfully');
+        
+        // Open dashboard in new tab
+        openDashboardInNewTab(htmlContent);
+        
+        // Show success notification
+        showNotification('Dashboard opened in new tab!', 'success');
+        
+    } catch (error) {
+        console.error('Error generating dashboard:', error);
+        showNotification(`Failed to generate dashboard: ${error.message}`, 'error');
+        showPlaceholder();
+    }
+}
+
+// Open dashboard HTML in new browser tab
+function openDashboardInNewTab(htmlContent) {
+    // Create a new window/tab
+    const newWindow = window.open('', '_blank');
+    
+    if (!newWindow) {
+        // Popup blocked - fallback to modal or download
+        alert('Popup blocked! Please allow popups for this site to view the dashboard.');
+        downloadDashboard(htmlContent);
+        return;
+    }
+    
+    // Write the HTML content to the new window
+    newWindow.document.open();
+    newWindow.document.write(htmlContent);
+    newWindow.document.close();
+}
+
+// Fallback: Download dashboard as HTML file
+function downloadDashboard(htmlContent) {
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `patient-dashboard-${Date.now()}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    showNotification('Dashboard downloaded as HTML file', 'info');
+}
+
+// Show loading state
+function showLoadingState() {
+    const container = document.querySelector('.analytics-content') || document.querySelector('.patient-analytics-section');
+    
+    if (container) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 4rem;">
+                <div class="spinner"></div>
+                <h3 style="margin-top: 1rem; color: #4a5568;">Generating Dashboard...</h3>
+                <p style="color: #718096;">Please wait while we fetch patient data and generate charts.</p>
+            </div>
+        `;
+    }
+}
+
+// Show placeholder when no patient selected
+function showPlaceholder() {
+    const container = document.querySelector('.analytics-content') || document.querySelector('.patient-analytics-section');
+    
+    if (container) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 4rem;">
+                <div style="font-size: 4rem; margin-bottom: 1rem;">👤</div>
+                <h3 style="color: #2d3748;">No Patient Selected</h3>
+                <p style="color: #718096; margin-top: 0.5rem;">
+                    Please select a patient from the dropdown above to view their analytics
+                </p>
+            </div>
+        `;
+    }
+}
+
+// Show notification toast
+function showNotification(message, type = 'info', autoClose = true) {
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    
+    const icons = {
+        success: '✓',
+        error: '✗',
+        info: 'ℹ',
+        warning: '⚠'
+    };
+    
+    const colors = {
+        success: '#48bb78',
+        error: '#e53e3e',
+        info: '#4299e1',
+        warning: '#ed8936'
+    };
+    
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: white;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        z-index: 10000;
+        border-left: 4px solid ${colors[type]};
+        animation: slideIn 0.3s ease;
+    `;
+    
+    notification.innerHTML = `
+        <span style="font-size: 1.5rem;">${icons[type]}</span>
+        <span style="color: #2d3748; font-weight: 500;">${message}</span>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    if (autoClose) {
+        setTimeout(() => {
+            notification.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    }
+    
+    return notification;
+}
+
+// Tab switching functions
+function showHospitalAnalytics() {
+    document.getElementById('hospitalAnalyticsBtn')?.classList.add('active');
+    document.getElementById('patientAnalyticsBtn')?.classList.remove('active');
+    document.querySelector('.hospital-analytics-section')?.classList.remove('hidden');
+    document.querySelector('.patient-analytics-section')?.classList.add('hidden');
+}
+
+function showPatientAnalytics() {
+    document.getElementById('patientAnalyticsBtn')?.classList.add('active');
+    document.getElementById('hospitalAnalyticsBtn')?.classList.remove('active');
+    document.querySelector('.patient-analytics-section')?.classList.remove('hidden');
+    document.querySelector('.hospital-analytics-section')?.classList.add('hidden');
+}
+
+// Add CSS animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    @keyframes slideOut {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+    }
+    
+    .spinner {
+        border: 4px solid #f3f4f6;
+        border-top: 4px solid #667eea;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .hidden {
+        display: none !important;
+    }
+`;
+document.head.appendChild(style);
+
+// Load analytics stats on page load
+async function loadAnalyticsStats() {
+  try {
+    const response = await fetch('http://localhost:5000/api/patients/stats/analytics');
+    if (!response.ok) throw new Error('Failed to fetch stats');
+    
+    const stats = await response.json();
+    
+    // Update the DOM
+    document.getElementById('totalPatients').textContent = stats.totalPatients;
+    document.getElementById('completionRate').textContent = stats.completionRate + '%';
+    document.getElementById('missedFollowups').textContent = stats.missedFollowups;
+    document.getElementById('missedRate').textContent = stats.missedRate + '%';
+    
+    console.log('✅ Analytics stats loaded:', stats);
+    
+  } catch (error) {
+    console.error('❌ Error loading analytics stats:', error);
+  }
+}
+
+// Call on page load
+document.addEventListener('DOMContentLoaded', function() {
+  loadAnalyticsStats(); // Add this line
+  loadPatients();
+  
+  // Tab switching
+  document.getElementById('hospitalAnalyticsBtn')?.addEventListener('click', showHospitalAnalytics);
+  document.getElementById('patientAnalyticsBtn')?.addEventListener('click', showPatientAnalytics);
+});
+
+
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reminders - Smart Patient Follow-Up System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .reminder-stats {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        .stat-box {
+            text-align: center;
+            padding: 10px;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
+        <div class="container-fluid">
+            <button class="btn btn-link text-primary" id="sidebarToggle"><i class="bi bi-list fs-4"></i></button>
+            <a class="navbar-brand fw-bold text-primary" href="#"><i class="bi bi-heart-pulse-fill"></i> Smart Patient
+                Follow-Up System</a>
+            <div class="dropdown">
+                <button class="btn btn-link text-dark dropdown-toggle" type="button" id="userDropdown"
+                    data-bs-toggle="dropdown"><i class="bi bi-person-circle fs-5"></i></button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="index.html"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="d-flex">
+        <!-- Sidebar -->
+        <div class="sidebar bg-primary text-white" id="sidebar">
+            <div class="sidebar-header p-3 mt-5">
+                <h5 class="text-center">Navigation</h5>
+            </div>
+            <ul class="nav flex-column">
+                <li class="nav-item"><a class="nav-link text-white" href="dashboard.html"><i
+                            class="bi bi-speedometer2"></i> Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link text-white" href="register.html"><i
+                            class="bi bi-person-plus-fill"></i> Register Patient</a></li>
+                <li class="nav-item"><a class="nav-link text-white active" href="reminders.html"><i
+                            class="bi bi-bell-fill"></i> Reminders</a></li>
+                <li class="nav-item"><a class="nav-link text-white" href="analytics.html"><i
+                            class="bi bi-bar-chart-fill"></i> Analytics</a></li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="container-fluid p-4">
+                <div class="row mb-4">
+                    <div class="col">
+                        <h2 class="fw-bold text-primary">Reminder Status Dashboard</h2>
+                        <p class="text-muted">Track and manage patient follow-up reminders</p>
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-primary" onclick="refreshReminders(event)"><i
+                                class="bi bi-arrow-clockwise"></i> Refresh</button>
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                <div class="reminder-stats d-none" id="statsSection">
+                    <div class="row">
+                        <div class="col-md-3 col-6">
+                            <div class="stat-box">
+                                <div class="stat-number" id="totalStat">0</div>
+                                <div class="stat-label">Total Reminders</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="stat-box">
+                                <div class="stat-number" id="sentStat">0</div>
+                                <div class="stat-label">Sent Successfully</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="stat-box">
+                                <div class="stat-number" id="pendingStat">0</div>
+                                <div class="stat-label">Pending</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="stat-box">
+                                <div class="stat-number" id="failedStat">0</div>
+                                <div class="stat-label">Failed</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <ul class="nav nav-tabs mb-4" id="reminderTabs" role="tablist">
+                    <li class="nav-item"><button class="nav-link active" id="overdue-tab" data-bs-toggle="tab"
+                            data-bs-target="#overdue" type="button"><i
+                                class="bi bi-exclamation-triangle-fill text-danger"></i> Overdue (0)</button></li>
+                    <li class="nav-item"><button class="nav-link" id="today-tab" data-bs-toggle="tab"
+                            data-bs-target="#today" type="button"><i class="bi bi-calendar-day-fill text-warning"></i>
+                            Today (0)</button></li>
+                    <li class="nav-item"><button class="nav-link" id="upcoming-tab" data-bs-toggle="tab"
+                            data-bs-target="#upcoming" type="button"><i class="bi bi-calendar-week text-info"></i>
+                            Upcoming (0)</button></li>
+                </ul>
+
+                <div class="tab-content" id="reminderTabContent">
+                    <div class="tab-pane fade show active" id="overdue" role="tabpanel">
+                        <div id="overdueContent">
+                            <div class="text-center py-5">
+                                <div class="spinner-border text-danger" role="status"></div>
+                                <p class="mt-3 text-muted">Loading overdue follow-ups...</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="today" role="tabpanel">
+                        <div id="todayContent">
+                            <div class="text-center py-5">
+                                <div class="spinner-border text-warning" role="status"></div>
+                                <p class="mt-3 text-muted">Loading today's follow-ups...</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="upcoming" role="tabpanel">
+                        <div id="upcomingContent">
+                            <div class="text-center py-5">
+                                <div class="spinner-border text-info" role="status"></div>
+                                <p class="mt-3 text-muted">Loading upcoming follow-ups...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const API_URL = 'http://localhost:5000/api';
+
+        document.getElementById('sidebarToggle').addEventListener('click', function () {
+            document.getElementById('sidebar').classList.toggle('active');
+        });
+
+        window.addEventListener('DOMContentLoaded', async function () {
+            await loadReminders();
+        });
+
+        async function loadReminders() {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+
+                const response = await fetch(`${API_URL}/reminders/dashboard`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Failed to fetch reminders: ${response.status} ${response.statusText} - ${errorText}`);
+                }
+
+                const data = await response.json();
+                console.log('Reminders loaded:', data);
+
+                // Process data
+                const now = new Date();
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                const overdue = [];
+                const todayReminders = [];
+                const upcoming = [];
+
+                data.reminders.forEach(reminder => {
+                    const followUpDate = new Date(reminder.next_followup);
+                    const reminderObj = {
+                        ...reminder,
+                        patientId: reminder.patient_id,
+                        patientName: reminder.patient_name,
+                        condition: reminder.condition_type,
+                        followUpDate: reminder.next_followup,
+                        doctor: reminder.assigned_doctor
+                    };
+
+                    if (followUpDate < today) overdue.push(reminderObj);
+                    else if (followUpDate.toDateString() === today.toDateString()) todayReminders.push(reminderObj);
+                    else upcoming.push(reminderObj);
+                });
+
+                // Fetch patients to find those without reminders
+                try {
+                    const patientsResponse = await fetch(`${API_URL}/patients/all`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (patientsResponse.ok) {
+                        const patientsData = await patientsResponse.json();
+                        const patients = patientsData.patients || []; // Handle {patients: [...]} structure
+
+                        patients.forEach(patient => {
+                            const hasReminder = data.reminders.some(r => r.patient_id === patient.id);
+                            if (!hasReminder && patient.reminder_enabled !== false) {
+                                const followUpDate = new Date(patient.nextFollowup || patient.next_followup);
+                                const patientObj = {
+                                    patientId: patient.id,
+                                    patientName: patient.name,
+                                    contact: patient.contact,
+                                    mail: patient.mail,
+                                    condition: patient.conditionType || patient.condition_type,
+                                    followUpDate: patient.nextFollowup || patient.next_followup,
+                                    status: 'no_reminder',
+                                    doctor: patient.assignedDoctor || patient.assigned_doctor
+                                };
+
+                                if (followUpDate < today) overdue.push(patientObj);
+                                else if (followUpDate.toDateString() === today.toDateString()) todayReminders.push(patientObj);
+                                else if ((followUpDate - today) / (1000 * 60 * 60 * 24) <= 7) upcoming.push(patientObj);
+                            }
+                        });
+                    }
+                } catch (err) {
+                    console.error('Error fetching patients:', err);
+                }
+
+                // Sort
+                overdue.sort((a, b) => new Date(b.followUpDate) - new Date(a.followUpDate));
+                todayReminders.sort((a, b) => new Date(a.followUpDate) - new Date(b.followUpDate));
+                upcoming.sort((a, b) => new Date(a.followUpDate) - new Date(b.followUpDate));
+
+                populateList('overdueContent', overdue, 'danger');
+                populateList('todayContent', todayReminders, 'warning');
+                populateList('upcomingContent', upcoming, 'info');
+
+                updateTabBadges({ overdue, today: todayReminders, upcoming });
+                if (data.stats) updateDashboardStats(data.stats);
+
+            } catch (error) {
+                console.error('Error loading reminders:', error);
+                showReminderError(error.message);
+            }
+        }
+
+        function populateList(elementId, items, color) {
+            const container = document.getElementById(elementId);
+            if (items.length === 0) {
+                container.innerHTML = '<div class="text-center py-5"><p class="text-muted">No items found</p></div>';
+                return;
+            }
+            container.innerHTML = items.map(item => createReminderCard(item, color)).join('');
+        }
+
+        function createReminderCard(item, color) {
+            const date = new Date(item.followUpDate).toLocaleDateString();
+            let statusBadge = '';
+            if (item.status === 'sent') statusBadge = '<span class="badge bg-success">Sent</span>';
+            else if (item.status === 'failed') statusBadge = '<span class="badge bg-danger">Failed</span>';
+            else if (item.status === 'pending') statusBadge = '<span class="badge bg-warning">Scheduled</span>';
+            else statusBadge = '<span class="badge bg-secondary">No Reminder</span>';
+
+            return `
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-auto"><div class="bg-${color} text-white rounded p-3"><i class="bi bi-calendar-event"></i></div></div>
+                            <div class="col">
+                                <h5 class="mb-1 fw-bold">${item.patientName}</h5>
+                                <p class="text-muted mb-1">${item.condition} | Dr. ${item.doctor || 'N/A'}</p>
+                                <small>Follow-up: <strong>${date}</strong> ${statusBadge}</small>
+                            </div>
+                            <div class="col-auto">
+                                ${item.status !== 'sent' ? `<button class="btn btn-sm btn-primary" onclick="sendManualReminder('${item.patientId}', '${item.patientName}')">Send Reminder</button>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateTabBadges(data) {
+            document.getElementById('overdue-tab').innerHTML = `<i class="bi bi-exclamation-triangle-fill text-danger"></i> Overdue (${data.overdue.length})`;
+            document.getElementById('today-tab').innerHTML = `<i class="bi bi-calendar-day-fill text-warning"></i> Today (${data.today.length})`;
+            document.getElementById('upcoming-tab').innerHTML = `<i class="bi bi-calendar-week text-info"></i> Upcoming (${data.upcoming.length})`;
+        }
+
+        function updateDashboardStats(stats) {
+            document.getElementById('statsSection').classList.remove('d-none');
+            document.getElementById('totalStat').textContent = stats.total || 0;
+            document.getElementById('sentStat').textContent = stats.sent || 0;
+            document.getElementById('pendingStat').textContent = stats.pending || 0;
+            document.getElementById('failedStat').textContent = stats.failed || 0;
+        }
+
+        function showReminderError(msg) {
+            ['overdueContent', 'todayContent', 'upcomingContent'].forEach(id => {
+                document.getElementById(id).innerHTML = `
+                    <div class="text-center py-5">
+                        <i class="bi bi-exclamation-triangle text-danger fs-1"></i>
+                        <p class="text-danger mt-3">Unable to load reminders</p>
+                        <small class="text-muted">${msg}</small>
+                        <br><button class="btn btn-primary mt-3" onclick="loadReminders()">Retry</button>
+                    </div>
+                `;
+            });
+        }
+
+        async function sendManualReminder(patientId, name) {
+            if (!confirm(`Send reminder to ${name}?`)) return;
+            try {
+                const token = localStorage.getItem('authToken');
+                const res = await fetch(`${API_URL}/reminders/send-manual`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ patient_id: patientId, reminder_type: 'both' })
+                });
+                if (res.ok) { alert('Sent!'); loadReminders(); }
+                else throw new Error('Failed');
+            } catch (e) { alert('Error sending reminder'); }
+        }
+
+        async function refreshReminders(e) {
+            await loadReminders();
+            const btn = e.target.closest('button');
+            const old = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-check"></i> Done';
+            setTimeout(() => btn.innerHTML = old, 1000);
+        }
+    </script>
+</body>
+
+</html>
