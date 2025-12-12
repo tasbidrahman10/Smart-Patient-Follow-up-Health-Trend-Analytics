@@ -414,7 +414,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- Bangladesh University of Engineering and Technology (BUET)
+- North South University (NSU)
 - CSE299 Course Supervisors
 - Open-source community for the amazing tools and libraries
 - n8n team for the powerful workflow automation platform
