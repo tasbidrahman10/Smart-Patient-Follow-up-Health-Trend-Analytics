@@ -1,6 +1,6 @@
 # 🏥 Smart Patient Follow-Up System
 
-A comprehensive digital healthcare management solution designed to ensure continuous patient care through automated follow-up tracking and intelligent reminders.
+A comprehensive digital healthcare management solution designed to ensure continuous patient care through automated follow-up tracking, intelligent reminders and visual analytical dashboard report of patients.
 
 [![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Express.js](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
@@ -30,7 +30,7 @@ A comprehensive digital healthcare management solution designed to ensure contin
 
 ## 🎯 Overview
 
-The **Smart Patient Follow-Up System** is an intelligent healthcare management platform that automates patient monitoring and follow-up scheduling. By leveraging modern web technologies and workflow automation, it ensures no patient is left behind in their treatment journey, while significantly reducing the administrative burden on healthcare providers.
+The **Smart Patient Follow-Up System** is an intelligent healthcare management platform that automates patient monitoring and follow-up scheduling, generates visually understanbale analytics of health vitals without human touch. By leveraging modern web technologies and workflow automation, it ensures no patient is left behind in their treatment journey, while significantly reducing the administrative burden on healthcare providers.
 
 **Developed as part of:** CSE299 - Junior Capstone Design Project
 
@@ -44,7 +44,7 @@ This system addresses critical challenges in the Bangladeshi healthcare landscap
 Bangladesh faces one of the world's lowest doctor-to-patient ratios. This system provides **automated supervision** that maintains vital connections between patients and healthcare providers without overwhelming medical staff.
 
 ### 💊 Treatment Adherence
-In today's fast-paced environment, patients frequently miss follow-up appointments, particularly critical for chronic conditions like **hypertension** and **diabetes**. Our intelligent reminder system ensures patients stay on track with their treatment plans.
+In today's fast-paced environment, patients frequently miss follow-up appointments, particularly critical for chronic conditions like **hypertension** and **diabetes**. Our intelligent reminder system ensures patients stay on track with their treatment plans. It also generates health analytics which patients easily understand their health vitals' condition by simply visualing the data. It already gives them an idea about their health before visiting doctor with the report. **Doctors' feedback on patients' reports is a must which cannot be avoided.**
 
 ### 📁 Digital Transformation
 Many local clinics still rely on vulnerable physical registers. This system offers a **high-impact, low-cost digitization solution** that protects patient data and ensures instant access to complete medical histories.
